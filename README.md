@@ -119,6 +119,64 @@ Run the production server:
 npm run start
 ```
 
+### Deploying to GitHub Pages 🌐
+
+This project is configured with `base: './'` in `vite.config.ts`, so assets resolve relatively and work seamlessly on GitHub Pages subpaths (`https://<username>.github.io/<repo-name>/`).
+
+#### Option 1: Automatic Deployment with GitHub Actions (Recommended)
+1. In your GitHub repository, navigate to **Settings** > **Pages**.
+2. Under **Build and deployment** > **Source**, select **GitHub Actions**.
+3. Create `.github/workflows/deploy.yml` with:
+   ```yaml
+   name: Deploy to GitHub Pages
+
+   on:
+     push:
+       branches: [ main ]
+     workflow_dispatch:
+
+   permissions:
+     contents: read
+     pages: write
+     id-token: write
+
+   concurrency:
+     group: 'pages'
+     cancel-in-progress: true
+
+   jobs:
+     deploy:
+       environment:
+         name: github-pages
+         url: ${{ steps.deployment.outputs.page_url }}
+       runs-on: ubuntu-latest
+       steps:
+         - name: Checkout
+           uses: actions/checkout@v4
+         - name: Setup Node
+           uses: actions/setup-node@v4
+           with:
+             node-version: 20
+         - name: Install dependencies
+           run: npm ci
+         - name: Build static site
+           run: npm run build
+         - name: Setup Pages
+           uses: actions/configure-pages@v5
+         - name: Upload artifact
+           uses: actions/upload-pages-artifact@v3
+           with:
+             path: './dist'
+         - name: Deploy to GitHub Pages
+           id: deployment
+           uses: actions/deploy-pages@v4
+   ```
+
+#### Option 2: Using the `gh-pages` package
+1. Install `gh-pages`: `npm install -D gh-pages`
+2. Add deploy script to `package.json`: `"deploy": "npm run build && gh-pages -d dist"`
+3. Run `npm run deploy`
+
 ---
 
 ## 📁 Project Structure
