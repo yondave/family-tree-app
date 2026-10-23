@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  }
+
+  h1, h2, h3, .font-display {
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+
+  .font-heritage {
+    font-family: 'Cinzel', serif;
+  }
+}
+
+/* Custom Tree Chart Styles */
+.tree-grid-bg {
+  background-size: 28px 28px;
+  background-image: 
+    radial-gradient(circle, rgba(168, 128, 87, 0.15) 1px, transparent 1px);
+}
+
+.tree-parchment-bg {
+  background-color: #fbf8f2;
+  background-image: radial-gradient(rgba(217, 189, 154, 0.25) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+/* Subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(180, 150, 120, 0.4);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(160, 130, 100, 0.6);
+}
+

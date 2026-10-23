@@ -1,0 +1,7 @@
+{
+  "name": "Family Tree App Maker",
+  "description": "Collaborative family tree builder with photo uploads, seamless GEDCOM/genealogy data import, interactive charts, and real-time co-editing.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
