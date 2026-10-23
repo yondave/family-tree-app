@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import confetti from 'canvas-confetti';
 import { Navbar } from './components/Navbar';
 import { TreeCanvas } from './components/TreeCanvas';
@@ -82,22 +82,44 @@ export function App() {
     }, 3500);
   }, []);
 
-  // Save to LocalStorage & Server (debounced)
+  // Debounced Save to LocalStorage & cross-tree sync
   useEffect(() => {
-    localStorage.setItem('family_tree_data', JSON.stringify(currentTree));
+    const timer = setTimeout(() => {
+      try {
+        localStorage.setItem('family_tree_data', JSON.stringify(currentTree));
+        setAllTreesList((prevList) => {
+          const exists = prevList.some((t) => t.id === currentTree.id);
+          const updatedList = exists
+            ? prevList.map((t) => (t.id === currentTree.id ? currentTree : t))
+            : [currentTree, ...prevList];
+          localStorage.setItem('all_family_trees', JSON.stringify(updatedList));
+          return updatedList;
+        });
+      } catch (err) {
+        console.error('Failed to persist tree data:', err);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
   }, [currentTree]);
 
-  // Sync viewing persona
+  // Sync viewing persona without redundant re-renders
   useEffect(() => {
     if (selectedPersonId && currentCollaborator) {
-      setCurrentTree((prev) => ({
-        ...prev,
-        collaborators: (prev.collaborators || []).map((c) =>
-          c.id === currentCollaborator.id
-            ? { ...c, currentViewingPersonId: selectedPersonId }
-            : c
-        ),
-      }));
+      setCurrentTree((prev) => {
+        const collab = (prev.collaborators || []).find((c) => c.id === currentCollaborator.id);
+        if (collab && collab.currentViewingPersonId === selectedPersonId) {
+          return prev;
+        }
+        return {
+          ...prev,
+          collaborators: (prev.collaborators || []).map((c) =>
+            c.id === currentCollaborator.id
+              ? { ...c, currentViewingPersonId: selectedPersonId }
+              : c
+          ),
+        };
+      });
     }
   }, [selectedPersonId, currentCollaborator.id]);
 
@@ -433,14 +455,18 @@ export function App() {
   };
 
   const selectedPerson = selectedPersonId ? currentTree.members[selectedPersonId] : undefined;
-  const memberCount = Object.keys(currentTree.members || {}).length;
+  const memberCount = useMemo(() => Object.keys(currentTree.members || {}).length, [currentTree.members]);
 
-  const treeSummaries = allTreesList.map((t) => ({
-    id: t.id,
-    name: t.name,
-    memberCount: Object.keys(t.members || {}).length,
-    updatedAt: t.updatedAt || t.createdAt,
-  }));
+  const treeSummaries = useMemo(
+    () =>
+      allTreesList.map((t) => ({
+        id: t.id,
+        name: t.name,
+        memberCount: Object.keys(t.members || {}).length,
+        updatedAt: t.updatedAt || t.createdAt,
+      })),
+    [allTreesList]
+  );
 
   return (
     <div className="min-h-screen bg-stone-100 flex flex-col selection:bg-amber-200 selection:text-amber-950">
@@ -463,6 +489,7 @@ export function App() {
         onSwitchCollaborator={handleSwitchCollaborator}
         onSearchPerson={setSearchQuery}
         searchQuery={searchQuery}
+        onSelectPerson={handleSelectPerson}
       />
 
       {/* Main Interactive Stage Body */}

@@ -20,7 +20,7 @@ import {
   ShieldCheck,
   ChevronDown
 } from 'lucide-react';
-import { FamilyTree, ViewMode, TreeTheme, Collaborator } from '../types';
+import { FamilyTree, ViewMode, TreeTheme, Collaborator, Person } from '../types';
 
 interface NavbarProps {
   tree: FamilyTree;
@@ -39,6 +39,7 @@ interface NavbarProps {
   onSwitchCollaborator: (collaborator: Collaborator) => void;
   onSearchPerson: (query: string) => void;
   searchQuery: string;
+  onSelectPerson?: (personId: string) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -58,11 +59,13 @@ export const Navbar: React.FC<NavbarProps> = ({
   onSwitchCollaborator,
   onSearchPerson,
   searchQuery,
+  onSelectPerson,
 }) => {
   const [showTreeDropdown, setShowTreeDropdown] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showThemeDropdown, setShowThemeDropdown] = useState(false);
   const [copiedShare, setCopiedShare] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   const memberCount = Object.keys(tree.members || {}).length;
   const photoCount = (tree.media || []).length;
@@ -171,23 +174,97 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* Center: Search Relatives */}
-        <div className="hidden md:flex items-center flex-1 max-w-xs relative">
+        {/* Center: Search Relatives with Live Match Dropdown */}
+        <div className="hidden md:flex items-center flex-1 max-w-sm relative">
           <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search ancestors, maiden names..."
+            placeholder="Search ancestors, occupations (Ctrl+/)..."
             value={searchQuery}
-            onChange={(e) => onSearchPerson(e.target.value)}
-            className="w-full bg-stone-800/80 border border-stone-700/80 rounded-full pl-9 pr-4 py-1.5 text-xs text-stone-200 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+            onFocus={() => setIsSearchFocused(true)}
+            onChange={(e) => {
+              onSearchPerson(e.target.value);
+              setIsSearchFocused(true);
+            }}
+            className="w-full bg-stone-800/80 border border-stone-700/80 rounded-full pl-9 pr-8 py-1.5 text-xs text-stone-200 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
           />
           {searchQuery && (
             <button
-              onClick={() => onSearchPerson('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-200 text-xs"
+              onClick={() => {
+                onSearchPerson('');
+                setIsSearchFocused(false);
+              }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-200 text-xs w-4 h-4 rounded-full flex items-center justify-center hover:bg-stone-700"
             >
               ✕
             </button>
+          )}
+
+          {/* Quick Search Dropdown Matches */}
+          {isSearchFocused && searchQuery.trim().length > 0 && (
+            <div className="absolute left-0 top-full mt-2 w-80 bg-stone-900 border border-stone-700 rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-100 max-h-72 overflow-y-auto">
+              <div className="px-2.5 py-1 text-[11px] font-semibold text-stone-400 uppercase tracking-wider flex items-center justify-between">
+                <span>Matching Relatives</span>
+                <span className="text-[10px] text-stone-400">Click to locate</span>
+              </div>
+              {(() => {
+                const q = searchQuery.toLowerCase().trim();
+                const matches = (Object.values(tree.members || {}) as Person[])
+                  .filter((p) =>
+                    p.firstName.toLowerCase().includes(q) ||
+                    p.lastName.toLowerCase().includes(q) ||
+                    (p.maidenName && p.maidenName.toLowerCase().includes(q)) ||
+                    (p.occupation && p.occupation.toLowerCase().includes(q)) ||
+                    (p.birthPlace && p.birthPlace.toLowerCase().includes(q))
+                  )
+                  .slice(0, 6);
+
+                if (matches.length === 0) {
+                  return (
+                    <div className="p-3 text-center text-xs text-stone-400">
+                      No relatives matching "{searchQuery}"
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="space-y-1 mt-1">
+                    {matches.map((person) => {
+                      const bYear = person.birthDate ? person.birthDate.split('-')[0] : '?';
+                      const dYear = person.deathDate ? person.deathDate.split('-')[0] : person.isLiving ? 'Living' : '?';
+                      return (
+                        <button
+                          key={person.id}
+                          onClick={() => {
+                            if (onSelectPerson) {
+                              onSelectPerson(person.id);
+                            }
+                            setIsSearchFocused(false);
+                          }}
+                          className="w-full text-left px-2.5 py-2 rounded-xl text-xs flex items-center gap-2.5 text-stone-300 hover:bg-stone-800 hover:text-amber-300 transition-colors group"
+                        >
+                          <div className="w-8 h-8 rounded-full overflow-hidden bg-stone-800 border border-stone-700 flex-shrink-0 flex items-center justify-center font-bold text-[11px] text-stone-300 group-hover:border-amber-500">
+                            {person.avatarUrl ? (
+                              <img src={person.avatarUrl} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              `${person.firstName[0]}${person.lastName ? person.lastName[0] : ''}`
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-stone-100 group-hover:text-amber-300 truncate">
+                              {person.firstName} {person.lastName}
+                            </p>
+                            <p className="text-[10px] text-stone-400 truncate">
+                              {bYear} – {dYear} {person.occupation ? `• ${person.occupation}` : ''}
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </div>
           )}
         </div>
 
