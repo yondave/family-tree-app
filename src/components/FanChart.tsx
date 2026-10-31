@@ -6,6 +6,7 @@ interface FanChartProps {
   tree: FamilyTree;
   selectedPersonId?: string;
   onSelectPerson: (personId: string) => void;
+  onOpenEditPerson?: (personId: string) => void;
   onOpenStory: (personId: string) => void;
 }
 
@@ -26,6 +27,7 @@ export const FanChart: React.FC<FanChartProps> = ({
   tree,
   selectedPersonId,
   onSelectPerson,
+  onOpenEditPerson,
   onOpenStory,
 }) => {
   const members = tree.members || {};
@@ -337,7 +339,13 @@ export const FanChart: React.FC<FanChartProps> = ({
 
               <div className="pt-3 border-t border-stone-100 flex items-center gap-2">
                 <button
-                  onClick={() => onSelectPerson(hoveredSegment.person!.id)}
+                  onClick={() => {
+                    if (onOpenEditPerson) {
+                      onOpenEditPerson(hoveredSegment.person!.id);
+                    } else {
+                      onSelectPerson(hoveredSegment.person!.id);
+                    }
+                  }}
                   className="flex-1 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
                 >
                   Open Full Record

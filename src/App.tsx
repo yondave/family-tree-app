@@ -154,10 +154,18 @@ export function App() {
     }));
   };
 
-  // Person Select handler
+  // Person Select handler - highlights person on canvas without opening modal
   const handleSelectPerson = (personId: string) => {
     setSelectedPersonId(personId);
-    setPersonModalInitialTab('vitals');
+  };
+
+  // Open Full Info / Edit Modal handler
+  const handleOpenEditPerson = (
+    personId: string,
+    initialTab: 'vitals' | 'media' | 'notes' | 'ai-story' = 'vitals'
+  ) => {
+    setSelectedPersonId(personId);
+    setPersonModalInitialTab(initialTab);
     setIsPersonModalOpen(true);
   };
 
@@ -533,6 +541,7 @@ export function App() {
                 tree={currentTree}
                 selectedPersonId={selectedPersonId}
                 onSelectPerson={handleSelectPerson}
+                onOpenEditPerson={handleOpenEditPerson}
                 onAddRelative={handleOpenAddRelative}
                 onOpenStory={handleOpenStory}
                 searchQuery={searchQuery}
@@ -546,6 +555,7 @@ export function App() {
                   tree={currentTree}
                   selectedPersonId={selectedPersonId}
                   onSelectPerson={handleSelectPerson}
+                  onOpenEditPerson={handleOpenEditPerson}
                   onOpenStory={handleOpenStory}
                 />
               </div>
@@ -557,6 +567,7 @@ export function App() {
                   tree={currentTree}
                   selectedPersonId={selectedPersonId}
                   onSelectPerson={handleSelectPerson}
+                  onOpenEditPerson={handleOpenEditPerson}
                   onAddRelative={(targetId, type) => handleOpenAddRelative(targetId, type)}
                   onOpenStory={handleOpenStory}
                 />
@@ -569,6 +580,7 @@ export function App() {
                   tree={currentTree}
                   selectedPersonId={selectedPersonId}
                   onSelectPerson={handleSelectPerson}
+                  onOpenEditPerson={handleOpenEditPerson}
                   onOpenStory={handleOpenStory}
                 />
               </div>
@@ -579,6 +591,7 @@ export function App() {
                 <TimelineView
                   tree={currentTree}
                   onSelectPerson={handleSelectPerson}
+                  onOpenEditPerson={handleOpenEditPerson}
                   onOpenStory={handleOpenStory}
                 />
               </div>

@@ -16,7 +16,8 @@ import {
   Calendar,
   Layers,
   LocateFixed,
-  Compass
+  Compass,
+  Info
 } from 'lucide-react';
 import { Person, FamilyTree, Collaborator, Gender } from '../types';
 import { getThemeConfig, ThemeConfig } from '../utils/theme';
@@ -25,6 +26,7 @@ interface TreeCanvasProps {
   tree: FamilyTree;
   selectedPersonId?: string;
   onSelectPerson: (personId: string) => void;
+  onOpenEditPerson?: (personId: string) => void;
   onAddRelative: (targetPersonId: string, relationshipType: 'child' | 'parent' | 'spouse') => void;
   onOpenStory: (personId: string) => void;
   searchQuery?: string;
@@ -66,6 +68,7 @@ interface TreeNodeCardProps {
   coEditors: Collaborator[];
   themeConfig: ThemeConfig;
   onSelectPerson: (id: string) => void;
+  onOpenEditPerson?: (id: string) => void;
   onAddRelative: (id: string, type: 'child' | 'parent' | 'spouse') => void;
   onOpenStory: (id: string) => void;
 }
@@ -80,6 +83,7 @@ const TreeNodeCard = memo<TreeNodeCardProps>(({
   coEditors,
   themeConfig,
   onSelectPerson,
+  onOpenEditPerson,
   onAddRelative,
   onOpenStory,
 }) => {
@@ -124,6 +128,10 @@ const TreeNodeCard = memo<TreeNodeCardProps>(({
       onClick={(e) => {
         e.stopPropagation();
         onSelectPerson(person.id);
+      }}
+      onDoubleClick={(e) => {
+        e.stopPropagation();
+        if (onOpenEditPerson) onOpenEditPerson(person.id);
       }}
       style={{
         position: 'absolute',
@@ -191,6 +199,28 @@ const TreeNodeCard = memo<TreeNodeCardProps>(({
             <h4 className={`font-display font-bold text-sm truncate leading-tight group-hover:text-amber-500 transition-colors ${themeConfig.textPrimaryClass}`}>
               {person.firstName} {person.lastName}
             </h4>
+
+            {/* Info icon on hover & when selected to view full details and edit */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onOpenEditPerson) {
+                  onOpenEditPerson(person.id);
+                } else {
+                  onSelectPerson(person.id);
+                }
+              }}
+              className={`p-1 -mr-1 rounded-full transition-all flex items-center justify-center flex-shrink-0 ${
+                isSelected
+                  ? 'opacity-100 text-amber-700 bg-amber-100/90 ring-1 ring-amber-400/50 hover:scale-110'
+                  : 'opacity-0 group-hover:opacity-100 text-stone-400 hover:text-amber-700 hover:bg-stone-200/70 hover:scale-110'
+              }`}
+              title="View & Edit Details"
+              aria-label={`View & edit details for ${person.firstName} ${person.lastName}`}
+            >
+              <Info className="w-3.5 h-3.5" />
+            </button>
           </div>
 
           {person.maidenName && (
@@ -259,53 +289,117 @@ const TreeNodeCard = memo<TreeNodeCardProps>(({
         </button>
       </div>
 
-      {/* Quick Actions Hover Palette */}
-      <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 hidden group-hover:flex items-center gap-1 bg-stone-900/95 backdrop-blur-md px-2 py-1 rounded-full shadow-xl border border-stone-700 z-30 animate-in fade-in zoom-in-95 duration-100">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onAddRelative(person.id, 'child');
-          }}
-          className="px-2 py-0.5 text-[10px] font-medium text-amber-300 hover:bg-stone-800 rounded-full flex items-center gap-1 transition-colors whitespace-nowrap"
-          title="Add child"
+      {/* Quick Add Button & Action Bar directly on Person when highlighted */}
+      {isSelected && (
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="absolute -bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center shadow-xl rounded-full bg-stone-900/95 backdrop-blur-md border border-amber-400/90 p-0.5 animate-in fade-in zoom-in-95 duration-150"
         >
-          <span>+ Child</span>
-        </button>
-        <span className="text-stone-600">|</span>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onAddRelative(person.id, 'spouse');
-          }}
-          className="px-2 py-0.5 text-[10px] font-medium text-rose-300 hover:bg-stone-800 rounded-full flex items-center gap-1 transition-colors whitespace-nowrap"
-          title="Add spouse / partner"
-        >
-          <Heart className="w-2.5 h-2.5" />
-          <span>+ Spouse</span>
-        </button>
-        <span className="text-stone-600">|</span>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onAddRelative(person.id, 'parent');
-          }}
-          className="px-2 py-0.5 text-[10px] font-medium text-sky-300 hover:bg-stone-800 rounded-full flex items-center gap-1 transition-colors whitespace-nowrap"
-          title="Add father or mother"
-        >
-          <span>+ Parent</span>
-        </button>
-        <span className="text-stone-600">|</span>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelectPerson(person.id);
-          }}
-          className="p-1 text-stone-300 hover:text-white hover:bg-stone-800 rounded-full"
-          title="Edit full profile"
-        >
-          <Edit3 className="w-3 h-3" />
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddRelative(person.id, 'child');
+            }}
+            className="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-bold rounded-full text-xs shadow-sm transition-all hover:scale-105 active:scale-95 whitespace-nowrap"
+            title="Quick Add Child"
+          >
+            <Plus className="w-3.5 h-3.5 stroke-[3]" />
+            <span>Quick Add</span>
+          </button>
+
+          <div className="flex items-center gap-0.5 px-1 text-[10px]">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddRelative(person.id, 'child');
+              }}
+              className="px-2 py-0.5 text-amber-300 hover:text-white hover:bg-stone-800 rounded-full font-medium transition-colors whitespace-nowrap"
+              title="Add Child"
+            >
+              + Child
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddRelative(person.id, 'spouse');
+              }}
+              className="px-2 py-0.5 text-rose-300 hover:text-white hover:bg-stone-800 rounded-full font-medium transition-colors whitespace-nowrap flex items-center gap-0.5"
+              title="Add Spouse / Partner"
+            >
+              <Heart className="w-2.5 h-2.5 text-rose-400" />
+              <span>Spouse</span>
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddRelative(person.id, 'parent');
+              }}
+              className="px-2 py-0.5 text-sky-300 hover:text-white hover:bg-stone-800 rounded-full font-medium transition-colors whitespace-nowrap"
+              title="Add Parent (Father / Mother)"
+            >
+              + Parent
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Actions Hover Palette for unselected cards */}
+      {!isSelected && (
+        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 hidden group-hover:flex items-center gap-1 bg-stone-900/95 backdrop-blur-md px-2 py-1 rounded-full shadow-xl border border-stone-700 z-30 animate-in fade-in zoom-in-95 duration-100">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddRelative(person.id, 'child');
+            }}
+            className="px-2 py-0.5 text-[10px] font-medium text-amber-300 hover:bg-stone-800 rounded-full flex items-center gap-1 transition-colors whitespace-nowrap"
+            title="Add child"
+          >
+            <span>+ Child</span>
+          </button>
+          <span className="text-stone-600">|</span>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddRelative(person.id, 'spouse');
+            }}
+            className="px-2 py-0.5 text-[10px] font-medium text-rose-300 hover:bg-stone-800 rounded-full flex items-center gap-1 transition-colors whitespace-nowrap"
+            title="Add spouse / partner"
+          >
+            <Heart className="w-2.5 h-2.5" />
+            <span>+ Spouse</span>
+          </button>
+          <span className="text-stone-600">|</span>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddRelative(person.id, 'parent');
+            }}
+            className="px-2 py-0.5 text-[10px] font-medium text-sky-300 hover:bg-stone-800 rounded-full flex items-center gap-1 transition-colors whitespace-nowrap"
+            title="Add father or mother"
+          >
+            <span>+ Parent</span>
+          </button>
+          <span className="text-stone-600">|</span>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onOpenEditPerson) {
+                onOpenEditPerson(person.id);
+              } else {
+                onSelectPerson(person.id);
+              }
+            }}
+            className="p-1 text-stone-300 hover:text-white hover:bg-stone-800 rounded-full"
+            title="Edit full profile"
+          >
+            <Edit3 className="w-3 h-3" />
+          </button>
+        </div>
+      )}
     </div>
   );
 });
@@ -316,6 +410,7 @@ export const TreeCanvas: React.FC<TreeCanvasProps> = ({
   tree,
   selectedPersonId,
   onSelectPerson,
+  onOpenEditPerson,
   onAddRelative,
   onOpenStory,
   searchQuery = '',
@@ -960,6 +1055,7 @@ export const TreeCanvas: React.FC<TreeCanvasProps> = ({
               coEditors={coEditors}
               themeConfig={themeConfig}
               onSelectPerson={onSelectPerson}
+              onOpenEditPerson={onOpenEditPerson}
               onAddRelative={onAddRelative}
               onOpenStory={onOpenStory}
             />

@@ -1,16 +1,17 @@
 # Family Tree App Maker 🌳
 
-A modern, full-featured, collaborative family tree builder and genealogy archival studio. Built with **React 19**, **TypeScript**, **Tailwind CSS**, and **Express**, featuring GPU-accelerated canvas rendering, multiple lineage visualization modes, standardized GEDCOM/CSV data exchange, real-time collaboration presence, archival photo albums, and AI-powered biographical storytelling.
+A modern, collaborative family tree builder and genealogy archival studio. Built with **React 19**, **TypeScript**, **Tailwind CSS**, and **Express**, featuring GPU-accelerated canvas rendering, multiple lineage visualization modes, standardized GEDCOM/CSV data exchange, real-time collaboration presence, archival photo albums, and AI-powered biographical storytelling.
 
 ---
 
 ## 🌟 Key Features
 
 ### 1. Interactive Family Tree Canvas
-- **High-Performance Rendering**: GPU-accelerated viewport with RAF-throttled mouse dragging, smooth zoom (35% to 220%), and pinch-to-zoom touch gesture support.
-- **Smart Generational Layout**: Barycenter parent-midpoint alignment algorithm with horizontal collision avoidance, reducing branch crossing and maintaining natural couple pairings.
+- **High-Performance Viewport**: GPU-accelerated canvas with RAF-throttled mouse dragging, smooth zoom (35% to 220%), and pinch-to-zoom touch gesture support.
+- **Smart Generational Layout**: Barycenter parent-midpoint alignment with horizontal collision avoidance, reducing branch crossing and maintaining natural couple pairings.
 - **Visual Connections**: Smooth cubic bezier curves for parent-child descents, marriage connector links with wedding band indicators, and generational strata tracking.
 - **Card Quick Actions**: Direct hover triggers to add children, spouses, or parents with automatic bidirectional relationship linking.
+- **Instant Search & Jump**: Real-time search dropdown that filters ancestors, maiden names, and occupations, auto-centering the canvas directly on the selected relative.
 
 ### 2. Multi-Perspective Visualization Views
 - **Tree Canvas**: Full free-form infinite canvas with generation tiers and family cluster cards.
@@ -88,7 +89,7 @@ Switch themes on the fly via the quick dropdown or open the interactive Theme Ga
 - Node.js 18+ or 20+
 - npm or bun
 
-### Installation
+### Local Development
 
 1. Install dependencies:
    ```bash
@@ -109,7 +110,7 @@ Switch themes on the fly via the quick dropdown or open the interactive Theme Ga
 
 ### Building for Production
 
-Compile frontend assets and bundle the Node.js server:
+Compile frontend assets and bundle the server:
 ```bash
 npm run build
 ```
@@ -119,72 +120,35 @@ Run the production server:
 npm run start
 ```
 
-### Deploying to GitHub Pages 🌐
+---
 
-This project is configured with `base: './'` in `vite.config.ts`, so assets resolve relatively and work seamlessly on GitHub Pages subpaths (`https://<username>.github.io/<repo-name>/`).
+## 🌐 Deploying to GitHub Pages (Zero Terminal Needed)
 
-#### Option 1: Automatic Deployment with GitHub Actions (Recommended)
-1. In your GitHub repository, navigate to **Settings** > **Pages**.
-2. Under **Build and deployment** > **Source**, select **GitHub Actions**.
-3. Create `.github/workflows/deploy.yml` with:
-   ```yaml
-   name: Deploy to GitHub Pages
+The repository is already pre-configured for GitHub Pages:
+- `base: './'` in `vite.config.ts` ensures relative asset paths (preventing white-screen errors on subpaths).
+- `public/404.html` is included for SPA route redirects.
+- An automated GitHub Actions workflow is pre-configured at `.github/workflows/deploy.yml`.
 
-   on:
-     push:
-       branches: [ main ]
-     workflow_dispatch:
-
-   permissions:
-     contents: read
-     pages: write
-     id-token: write
-
-   concurrency:
-     group: 'pages'
-     cancel-in-progress: true
-
-   jobs:
-     deploy:
-       environment:
-         name: github-pages
-         url: ${{ steps.deployment.outputs.page_url }}
-       runs-on: ubuntu-latest
-       steps:
-         - name: Checkout
-           uses: actions/checkout@v4
-         - name: Setup Node
-           uses: actions/setup-node@v4
-           with:
-             node-version: 20
-         - name: Install dependencies
-           run: npm ci
-         - name: Build static site
-           run: npm run build
-         - name: Setup Pages
-           uses: actions/configure-pages@v5
-         - name: Upload artifact
-           uses: actions/upload-pages-artifact@v3
-           with:
-             path: './dist'
-         - name: Deploy to GitHub Pages
-           id: deployment
-           uses: actions/deploy-pages@v4
-   ```
-
-#### Option 2: Using the `gh-pages` package
-1. Install `gh-pages`: `npm install -D gh-pages`
-2. Add deploy script to `package.json`: `"deploy": "npm run build && gh-pages -d dist"`
-3. Run `npm run deploy`
+### Deployment Steps (Directly from GitHub in your Browser):
+1. Push your repository to GitHub.
+2. In your GitHub repository, click **Settings** (top tab).
+3. On the left sidebar, click **Pages**.
+4. Under **Build and deployment** > **Source**, select **GitHub Actions**.
+5. GitHub will automatically run the workflow and deploy the site. Your live link will appear under the **Actions** tab with a green checkmark!
 
 ---
 
 ## 📁 Project Structure
 
 ```
-├── public/                 # Static assets and favicons
+├── .github/
+│   └── workflows/
+│       └── deploy.yml       # Automated GitHub Pages CI/CD workflow
+├── public/
+│   ├── 404.html             # GitHub Pages client-side routing fallback
+│   └── assets/              # Static branding and icon assets
 ├── src/
-│   ├── components/         # Reusable genealogy components
+│   ├── components/          # Reusable genealogy components
 │   │   ├── AddMemberModal.tsx       # Relative creation with relation linking
 │   │   ├── AncestorChart.tsx        # 4-generation pedigree chart
 │   │   ├── CollaborationDrawer.tsx  # Activity feed & collaborator management
@@ -206,10 +170,11 @@ This project is configured with `base: './'` in `vite.config.ts`, so assets reso
 │   ├── App.tsx                      # Root orchestration & state persistence
 │   ├── index.css                    # Tailwind CSS v4 styling & vintage textures
 │   └── main.tsx                     # React root mount
-├── server.ts               # Express server with Gemini endpoints & Vite middleware
-├── metadata.json           # Application identity & permissions
-├── package.json            # Scripts and dependencies
-└── vite.config.ts          # Vite bundling configuration
+├── server.ts                # Express server with Gemini endpoints & Vite middleware
+├── metadata.json            # Application identity & permissions
+├── package.json             # Scripts and dependencies
+├── vite.config.ts           # Vite bundling configuration with relative base
+└── README.md                # Project documentation
 ```
 
 ---

@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Person, FamilyTree } from '../types';
-import { ChevronDown, ChevronRight, User, Users, Calendar, MapPin, Sparkles, UserPlus } from 'lucide-react';
+import { ChevronDown, ChevronRight, User, Users, Calendar, MapPin, Sparkles, UserPlus, Info, Plus } from 'lucide-react';
 
 interface DescendantChartProps {
   tree: FamilyTree;
   selectedPersonId?: string;
   onSelectPerson: (personId: string) => void;
+  onOpenEditPerson?: (personId: string) => void;
   onAddRelative: (personId: string, type: 'child' | 'spouse') => void;
   onOpenStory: (personId: string) => void;
 }
@@ -14,6 +15,7 @@ export const DescendantChart: React.FC<DescendantChartProps> = ({
   tree,
   selectedPersonId,
   onSelectPerson,
+  onOpenEditPerson,
   onAddRelative,
   onOpenStory,
 }) => {
@@ -66,9 +68,9 @@ export const DescendantChart: React.FC<DescendantChartProps> = ({
           {/* Main Person Card */}
           <div
             onClick={() => onSelectPerson(person.id)}
-            className={`p-3 rounded-2xl border transition-all duration-150 cursor-pointer shadow-xs hover:shadow-md max-w-sm flex-1 sm:flex-none sm:min-w-[280px] ${
+            className={`p-3 group rounded-2xl border transition-all duration-150 cursor-pointer shadow-xs hover:shadow-md max-w-sm flex-1 sm:flex-none sm:min-w-[280px] relative ${
               person.id === selectedPersonId
-                ? 'bg-amber-100/90 border-amber-500 ring-2 ring-amber-400'
+                ? 'bg-amber-100/90 border-amber-500 ring-2 ring-amber-400 shadow-md'
                 : 'bg-white hover:bg-amber-50/40 border-stone-200'
             }`}
           >
@@ -81,13 +83,30 @@ export const DescendantChart: React.FC<DescendantChartProps> = ({
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-1">
                   <h4 className="font-display font-bold text-sm text-stone-900 truncate">
                     {person.firstName} {person.lastName}
                   </h4>
-                  <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded">
-                    Gen {depth + 1}
-                  </span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (onOpenEditPerson) {
+                          onOpenEditPerson(person.id);
+                        } else {
+                          onSelectPerson(person.id);
+                        }
+                      }}
+                      className="p-1 rounded-full text-stone-400 hover:text-amber-700 hover:bg-amber-100/70 transition-all opacity-0 group-hover:opacity-100 flex-shrink-0"
+                      title="View & Edit Details"
+                    >
+                      <Info className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded">
+                      Gen {depth + 1}
+                    </span>
+                  </div>
                 </div>
                 <p className="text-xs text-stone-500 flex items-center gap-1 mt-0.5">
                   <Calendar className="w-3 h-3 text-amber-700" />
@@ -112,10 +131,25 @@ export const DescendantChart: React.FC<DescendantChartProps> = ({
                     e.stopPropagation();
                     onAddRelative(person.id, 'child');
                   }}
-                  className="text-amber-700 hover:text-amber-900 font-medium flex items-center gap-0.5"
+                  className={`font-semibold flex items-center gap-0.5 transition-colors ${
+                    person.id === selectedPersonId
+                      ? 'text-amber-900 font-bold bg-amber-200/80 px-2 py-0.5 rounded-full'
+                      : 'text-amber-700 hover:text-amber-900'
+                  }`}
+                  title="Add child"
                 >
-                  <UserPlus className="w-3 h-3" />
+                  <Plus className="w-3 h-3 stroke-[2.5]" />
                   <span>+ Child</span>
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAddRelative(person.id, 'spouse');
+                  }}
+                  className="text-rose-700 hover:text-rose-900 font-medium flex items-center gap-0.5"
+                  title="Add spouse"
+                >
+                  <span>+ Spouse</span>
                 </button>
               </div>
 

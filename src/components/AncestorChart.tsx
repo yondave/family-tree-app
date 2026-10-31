@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Person, FamilyTree } from '../types';
 import { getThemeConfig } from '../utils/theme';
-import { ChevronRight, User, Calendar, MapPin, Sparkles, Printer } from 'lucide-react';
+import { ChevronRight, User, Calendar, MapPin, Sparkles, Printer, Info } from 'lucide-react';
 
 interface AncestorChartProps {
   tree: FamilyTree;
   selectedPersonId?: string;
   onSelectPerson: (personId: string) => void;
+  onOpenEditPerson?: (personId: string) => void;
   onOpenStory: (personId: string) => void;
 }
 
@@ -14,6 +15,7 @@ export const AncestorChart: React.FC<AncestorChartProps> = ({
   tree,
   selectedPersonId,
   onSelectPerson,
+  onOpenEditPerson,
   onOpenStory,
 }) => {
   const members = tree.members || {};
@@ -93,7 +95,7 @@ export const AncestorChart: React.FC<AncestorChartProps> = ({
     return (
       <div
         onClick={() => onSelectPerson(person.id)}
-        className={`${widthClass} rounded-xl border transition-all duration-200 cursor-pointer p-3 ${themeConfig.cardBgClass} ${themeConfig.cardBorderClass} ${themeConfig.cardShadowClass} ${
+        className={`${widthClass} group rounded-xl border transition-all duration-200 cursor-pointer p-3 ${themeConfig.cardBgClass} ${themeConfig.cardBorderClass} ${themeConfig.cardShadowClass} ${
           isFocal
             ? 'ring-2 ring-amber-500 scale-[1.02]'
             : 'hover:scale-[1.01] hover:border-amber-400/80'
@@ -113,9 +115,26 @@ export const AncestorChart: React.FC<AncestorChartProps> = ({
                 {label}
               </p>
             )}
-            <h4 className={`font-display font-bold text-xs truncate ${themeConfig.textPrimaryClass}`}>
-              {person.firstName} {person.lastName}
-            </h4>
+            <div className="flex items-center justify-between gap-1">
+              <h4 className={`font-display font-bold text-xs truncate ${themeConfig.textPrimaryClass}`}>
+                {person.firstName} {person.lastName}
+              </h4>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onOpenEditPerson) {
+                    onOpenEditPerson(person.id);
+                  } else {
+                    onSelectPerson(person.id);
+                  }
+                }}
+                className="p-1 -mr-1 rounded-full text-stone-400 hover:text-amber-700 hover:bg-stone-200/70 transition-all opacity-0 group-hover:opacity-100 flex-shrink-0"
+                title="View & Edit Details"
+              >
+                <Info className="w-3 h-3" />
+              </button>
+            </div>
             <p className={`text-[11px] flex items-center gap-1 mt-0.5 ${themeConfig.textSecondaryClass}`}>
               <Calendar className="w-3 h-3 text-amber-500 flex-shrink-0" />
               <span>

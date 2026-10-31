@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { Person, FamilyTree } from '../types';
-import { Calendar, Sparkles, MapPin, Filter } from 'lucide-react';
+import { Calendar, Sparkles, MapPin, Filter, Info } from 'lucide-react';
 
 interface TimelineViewProps {
   tree: FamilyTree;
   onSelectPerson: (personId: string) => void;
+  onOpenEditPerson?: (personId: string) => void;
   onOpenStory: (personId: string) => void;
 }
 
@@ -26,6 +27,7 @@ const HISTORICAL_ERAS: HistoricalEra[] = [
 export const TimelineView: React.FC<TimelineViewProps> = ({
   tree,
   onSelectPerson,
+  onOpenEditPerson,
   onOpenStory,
 }) => {
   const members = (Object.values(tree.members || {}) as Person[]);
@@ -229,9 +231,26 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                       <span className="font-display font-bold text-xs truncate">
                         {person.firstName} {person.lastName}
                       </span>
-                      <span className="text-[10px] font-mono opacity-80 whitespace-nowrap">
-                        {birthYear} – {person.isLiving ? 'Now' : deathYear} ({lifespanYears}y)
-                      </span>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <span className="text-[10px] font-mono opacity-80 whitespace-nowrap">
+                          {birthYear} – {person.isLiving ? 'Now' : deathYear} ({lifespanYears}y)
+                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (onOpenEditPerson) {
+                              onOpenEditPerson(person.id);
+                            } else {
+                              onSelectPerson(person.id);
+                            }
+                          }}
+                          className="p-1 rounded-full text-stone-700 hover:text-stone-950 bg-white/60 hover:bg-white shadow-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="View & Edit Details"
+                        >
+                          <Info className="w-3 h-3" />
+                        </button>
+                      </div>
                     </div>
 
                     {/* Living green pulse dot */}
